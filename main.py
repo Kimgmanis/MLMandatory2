@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from minisom import MiniSom
 from pylab import bone, pcolor, colorbar, plot, show
@@ -11,6 +14,9 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MultiLabelBinarizer
+from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 # API Key Stored in environmental variables
 KEY = config("STEAM_API_KEY")  # Link: https://pypi.org/project/steam/
@@ -130,5 +136,30 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 y_preprocessed = preprocessor.fit_transform(y)
 
-print(X)
-print(y_preprocessed)
+# print(X)
+# print(y_preprocessed)
+
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = 0.2, random_state = 42 )
+# Model
+model = Sequential()
+model.add(Dense(64,activation='relu')) # 4 outputs. It will automatically adapt to number inputs
+model.add(Dense(64,activation='relu'))
+model.add(Dense(64,activation='relu'))
+model.add(Dense(1,activation='sigmoid'))
+
+adam = Adam(learning_rate=0.001) # you may have to change learning_rate, if the model does not learn.
+model.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
+
+# Train
+model.fit(X_train,y_train,epochs=100, verbose=1)
+# Show loss vs. epochs
+loss = model.history.history['loss']
+sns.lineplot(x=range(len(loss)),y=loss)
+model.evaluate(X_test,y_test,verbose=1)
+
+y_pred = model.predict(X_test)
+y_pred = (y_pred > 0.5) # creates a new array with true/false based on the boolean test
+
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
+

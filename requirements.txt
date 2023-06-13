@@ -1,5 +1,5 @@
-numpy==1.24.3
-pandas==2.0.2
+numpy~=1.24.3
+pandas~=2.0.2
 matplotlib~=3.7.1
 scikit-learn~=1.2.2
 MiniSom~=2.3.1
