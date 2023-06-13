@@ -40,7 +40,7 @@ games2 = gamesDataset.loc[:, ['recent_reviews']]
 # Split the 'recent_reviews' column into separate columns
 games2[['recent_review_sentiment', 'recent_review_count', 'recent_review_percentage']] =\
     games2['recent_reviews'].str.extract(r'([A-Za-z\s]+),\(([\d,]+)\),-\s([\d%]+)')
-games = games.drop('recent_reviews', axis=1)  # Remove the original 'recent_reviews' column
+games2 = games2.drop('recent_reviews', axis=1)  # Remove the original 'recent_reviews' column
 
 games3 = gamesDataset.loc[:, ['name', 'popular_tags']]  # test3
 # str.split based on ',' and assigning the resulting list to a column called 'tags'
