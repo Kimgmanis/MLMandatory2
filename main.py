@@ -6,6 +6,11 @@ from minisom import MiniSom
 from pylab import bone, pcolor, colorbar, plot, show
 from steam import Steam
 from decouple import config
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import MultiLabelBinarizer
 
 # API Key Stored in environmental variables
 KEY = config("STEAM_API_KEY")  # Link: https://pypi.org/project/steam/
@@ -82,10 +87,45 @@ reviewTagCol = ['name', 'all_review_sentiment', 'all_review_count', 'all_review_
 filtered_data = combined_data[all_columns]
 # X = combined_data[nameTimeCol]
 X = combined_data[combined_data['ownedGame']][nameTimeCol]
-
+# y = using reviewTagCol
 y = combined_data[reviewTagCol]
 
 # print(combined_data)
 # print(filtered_data)  # Prints all_columns = (name, playtime_forever,..)
+# y processing
+# create binary columns for each tag
+mlb = MultiLabelBinarizer()
+y = y.join(pd.DataFrame(mlb.fit_transform(y.pop('tags')),
+                        columns=mlb.classes_,
+                        index=y.index))
+
+# Numeric features
+numeric_features = ['all_review_count', 'recent_review_count', 'all_review_percentage', 'recent_review_percentage']
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())])
+
+# Convert columns to numeric and replace ',' with nothing
+for feature in numeric_features:
+    y[feature] = pd.to_numeric(y[feature].str.replace(',', ''), errors='coerce')
+
+# Categorical features
+categorical_features = ['all_review_sentiment', 'recent_review_sentiment', 'name']
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))])
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)])
+
+# Processed Data
+X = pd.get_dummies(X)
+X = X.values
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+y_preprocessed = preprocessor.fit_transform(y)
+
 print(X)
-print(y)
+print(y_preprocessed)
