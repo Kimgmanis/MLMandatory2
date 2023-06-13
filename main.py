@@ -89,6 +89,9 @@ filtered_data = combined_data[all_columns]
 X = combined_data[combined_data['ownedGame']][nameTimeCol]
 # y = using reviewTagCol
 y = combined_data[reviewTagCol]
+# Saving column names before preprocessing.
+XColumns = X.columns
+yColumns = list(y.columns)
 
 # print(combined_data)
 # print(filtered_data)  # Prints all_columns = (name, playtime_forever,..)
