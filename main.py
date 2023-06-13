@@ -66,6 +66,9 @@ games['name'] = games['name'].str.lower()
 # Merge userDataset with games based on the game name
 combined_data = pd.merge(userDataset, games, on='name', how='right')
 
+# Replaces NaN to false for ownedGame column
+combined_data['ownedGame'].fillna(False, inplace=True)
+
 # Select the desired columns
 all_columns = ['name', 'playtime_forever', 'all_review_sentiment', 'all_review_count', 'all_review_percentage',
                'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage', 'ownedGame']
@@ -77,10 +80,12 @@ reviewTagCol = ['name', 'all_review_sentiment', 'all_review_count', 'all_review_
 
 # Filter the combined data based on the selected columns
 filtered_data = combined_data[all_columns]
-X = combined_data[nameTimeCol]
+# X = combined_data[nameTimeCol]
+X = combined_data[combined_data['ownedGame']][nameTimeCol]
+
 y = combined_data[reviewTagCol]
 
-print(combined_data[['name', 'ownedGame']])
-print(filtered_data)  # Prints all_columns = (name, playtime_forever,..)
+# print(combined_data)
+# print(filtered_data)  # Prints all_columns = (name, playtime_forever,..)
 print(X)
 print(y)
