@@ -32,12 +32,12 @@ userDataset = pd.DataFrame.from_dict(userGames)
 games = gamesDataset.loc[:, ['name', 'recent_reviews', 'all_reviews', 'popular_tags']]
 
 # Split the 'all_reviews' column into separate columns
-games[['all_review_sentiment', 'all_review_count', 'all_review_percentage']] =\
+games[['all_review_sentiment', 'all_review_count', 'all_review_percentage']] = \
     games['all_reviews'].str.extract(r'([A-Za-z\s]+),\(([\d,]+)\),-\s([\d%]+)')
 games = games.drop('all_reviews', axis=1)  # Used drop to remove the original 'popular_tags' column
 
 # Split the 'recent_reviews' column into separate columns
-games[['recent_review_sentiment', 'recent_review_count', 'recent_review_percentage']] =\
+games[['recent_review_sentiment', 'recent_review_count', 'recent_review_percentage']] = \
     games['recent_reviews'].str.extract(r'([A-Za-z\s]+),\(([\d,]+)\),-\s([\d%]+)')
 games = games.drop('recent_reviews', axis=1)  # Remove the original 'recent_reviews' column
 
@@ -52,12 +52,6 @@ new_rows = userDataset['games'].apply(lambda x: pd.Series(x))
 # Concatenate new rows with the original DataFrame
 userDataset = pd.concat([userDataset.drop('games', axis=1), new_rows], axis=1)
 
-# Select and display specific columns
-# selected_columns = ['name', 'playtime_forever']  # playtime_forever is total number of minutes played on a game
-
-# print(userDataset[selected_columns])
-# print(games)
-
 # Strip leading and trailing whitespaces from game names in both datasets
 userDataset['name'] = userDataset['name'].str.strip()
 games['name'] = games['name'].str.strip()
@@ -70,21 +64,19 @@ games['name'] = games['name'].str.lower()
 combined_data = pd.merge(userDataset, games, on='name', how='right')
 
 # Select the desired columns
-selected_columns = ['name', 'playtime_forever', 'all_review_sentiment', 'all_review_count', 'all_review_percentage',
-                    'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage']
+all_columns = ['name', 'playtime_forever', 'all_review_sentiment', 'all_review_count', 'all_review_percentage',
+               'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage']
+
+# Assign X and y dataframe
+nameTimeCol = ['name', 'playtime_forever']  # X
+reviewTagCol = ['name', 'all_review_sentiment', 'all_review_count', 'all_review_percentage',  # y
+                'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage', 'tags']
 
 # Filter the combined data based on the selected columns
-filtered_data = combined_data[selected_columns]
+filtered_data = combined_data[all_columns]
+X = combined_data[nameTimeCol]
+y = combined_data[reviewTagCol]
 
-# Print the combined data
-print(combined_data['name'])
-print(combined_data['playtime_forever'])
-print(combined_data['all_review_sentiment'])
-print(combined_data['all_review_count'])
-print(combined_data['all_review_percentage'])
-print(combined_data['recent_review_sentiment'])
-print(combined_data['recent_review_count'])
-print(combined_data['recent_review_percentage'])
-print(combined_data['tags'])
-print(combined_data.columns)
-print(filtered_data)
+print(filtered_data)  # Prints all_columns = (name, playtime_forever,..)
+print(X)
+print(y)
