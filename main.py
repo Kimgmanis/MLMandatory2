@@ -20,14 +20,14 @@ steam = Steam(KEY)  # Wrapper for API
 account = "Kingmanis1929"
 accountID = "76561198052658415"
 # App id: to get specific apps
-terraria_app_id = 105600
+# terraria_app_id = 105600
 
 # arguments: steamid
 user = steam.users.search_user(account)  # User details / Easy and quick way to obtain user ID
 # User game details
 userGames = steam.users.get_owned_games(accountID)
 # Searches for a game
-searchGame = steam.apps.get_app_details(terraria_app_id)
+# searchGame = steam.apps.get_app_details(terraria_app_id)
 
 # Data ini
 gamesDataset = pd.read_csv('steam_games.csv')
