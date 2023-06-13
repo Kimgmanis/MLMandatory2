@@ -53,10 +53,10 @@ new_rows = userDataset['games'].apply(lambda x: pd.Series(x))
 userDataset = pd.concat([userDataset.drop('games', axis=1), new_rows], axis=1)
 
 # Select and display specific columns
-selected_columns = ['name', 'playtime_forever']  # playtime_forever is total number of minutes played on a game
+# selected_columns = ['name', 'playtime_forever']  # playtime_forever is total number of minutes played on a game
 
-print(userDataset[selected_columns])
-print(games)
+# print(userDataset[selected_columns])
+# print(games)
 
 # Strip leading and trailing whitespaces from game names in both datasets
 userDataset['name'] = userDataset['name'].str.strip()
@@ -69,6 +69,13 @@ games['name'] = games['name'].str.lower()
 # Merge userDataset with games based on the game name
 combined_data = pd.merge(userDataset, games, on='name', how='right')
 
+# Select the desired columns
+selected_columns = ['name', 'playtime_forever', 'all_review_sentiment', 'all_review_count', 'all_review_percentage',
+                    'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage']
+
+# Filter the combined data based on the selected columns
+filtered_data = combined_data[selected_columns]
+
 # Print the combined data
 print(combined_data['name'])
 print(combined_data['playtime_forever'])
@@ -78,4 +85,6 @@ print(combined_data['all_review_percentage'])
 print(combined_data['recent_review_sentiment'])
 print(combined_data['recent_review_count'])
 print(combined_data['recent_review_percentage'])
+print(combined_data['tags'])
 print(combined_data.columns)
+print(filtered_data)
