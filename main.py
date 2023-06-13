@@ -52,6 +52,9 @@ new_rows = userDataset['games'].apply(lambda x: pd.Series(x))
 # Concatenate new rows with the original DataFrame
 userDataset = pd.concat([userDataset.drop('games', axis=1), new_rows], axis=1)
 
+# Add a new column 'ownedGame' and set it to True initially
+userDataset['ownedGame'] = True
+
 # Strip leading and trailing whitespaces from game names in both datasets
 userDataset['name'] = userDataset['name'].str.strip()
 games['name'] = games['name'].str.strip()
@@ -65,7 +68,7 @@ combined_data = pd.merge(userDataset, games, on='name', how='right')
 
 # Select the desired columns
 all_columns = ['name', 'playtime_forever', 'all_review_sentiment', 'all_review_count', 'all_review_percentage',
-               'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage']
+               'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage', 'ownedGame']
 
 # Assign X and y dataframe
 nameTimeCol = ['name', 'playtime_forever']  # X
@@ -77,6 +80,7 @@ filtered_data = combined_data[all_columns]
 X = combined_data[nameTimeCol]
 y = combined_data[reviewTagCol]
 
+print(combined_data[['name', 'ownedGame']])
 print(filtered_data)  # Prints all_columns = (name, playtime_forever,..)
 print(X)
 print(y)
