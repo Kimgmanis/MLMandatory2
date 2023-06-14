@@ -82,7 +82,7 @@ combined_data['ownedGame'].fillna(False, inplace=True)
 
 # Select the desired columns
 all_columns = ['name', 'playtime_forever', 'all_review_sentiment', 'all_review_count', 'all_review_percentage',
-               'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage', 'ownedGame']
+               'recent_review_sentiment', 'recent_review_count', 'recent_review_percentage', 'ownedGame', 'tags']
 
 # Assign X and y dataframe
 nameTimeCol = ['name', 'playtime_forever']  # X
@@ -94,7 +94,7 @@ filtered_data = combined_data[all_columns]
 # X = combined_data[nameTimeCol]
 X = combined_data[combined_data['ownedGame']][nameTimeCol]
 # y = using reviewTagCol
-y = combined_data[reviewTagCol]
+y = combined_data[combined_data['ownedGame']][reviewTagCol]
 # Saving column names before preprocessing.
 XColumns = X.columns
 yColumns = list(y.columns)
@@ -122,7 +122,7 @@ for feature in numeric_features:
 categorical_features = ['all_review_sentiment', 'recent_review_sentiment', 'name']
 categorical_transformer = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
-    ('onehot', OneHotEncoder(handle_unknown='ignore'))])
+    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse=False))])
 
 preprocessor = ColumnTransformer(
     transformers=[
@@ -134,7 +134,7 @@ X = pd.get_dummies(X)
 X = X.values
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
-y_preprocessed = preprocessor.fit_transform(y)
+y = preprocessor.fit_transform(y)
 
 # print(X)
 # print(y_preprocessed)
@@ -145,21 +145,47 @@ model = Sequential()
 model.add(Dense(64,activation='relu')) # 4 outputs. It will automatically adapt to number inputs
 model.add(Dense(64,activation='relu'))
 model.add(Dense(64,activation='relu'))
-model.add(Dense(1,activation='sigmoid'))
+model.add(Dense(183,activation='softmax'))
 
 adam = Adam(learning_rate=0.001) # you may have to change learning_rate, if the model does not learn.
-model.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
 # Train
-model.fit(X_train,y_train,epochs=100, verbose=1)
+model.fit(X_train,y_train,epochs=500, verbose=1)
 # Show loss vs. epochs
 loss = model.history.history['loss']
 sns.lineplot(x=range(len(loss)),y=loss)
 model.evaluate(X_test,y_test,verbose=1)
 
+# Generate the confusion matrix
 y_pred = model.predict(X_test)
-y_pred = (y_pred > 0.5) # creates a new array with true/false based on the boolean test
+y_pred_classes = np.argmax(y_pred, axis=1)
+y_test_classes = np.argmax(y_test, axis=1)
+cm = confusion_matrix(y_test_classes, y_pred_classes)
 
-cm = confusion_matrix(y_test, y_pred)
-print(cm)
+# Convert the 'tags' column from lists to tuples
+combined_data['tags'] = combined_data['tags'].apply(tuple)
 
+# Get the unique class names from your 'tags' field.
+class_names = combined_data['tags'].unique().tolist()
+
+# Convert the confusion matrix to a DataFrame
+cm_df = pd.DataFrame(cm, index=class_names[:cm.shape[0]], columns=class_names[:cm.shape[1]])
+cm_df['tags'] = class_names[:cm.shape[0]]  # Add 'tags' column
+
+# Convert the 'tags' column to string type
+cm_df['tags'] = cm_df['tags'].astype(str)
+
+# Reshape the DataFrame to explode the nested tags
+cm_df_exp = cm_df['tags'].apply(lambda x: x.split(',')).explode().reset_index(drop=True).to_frame()
+cm_df_exp.columns = ['tag']
+
+## Convert the values in the confusion matrix DataFrame to numeric
+cm_df_numeric = cm_df.apply(lambda x: pd.to_numeric(x, errors='coerce'))
+
+# Create the heatmap using seaborn with the numeric values
+plt.figure(figsize=(10, 7))
+sns.heatmap(cm_df_numeric, annot=True, fmt='g')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
